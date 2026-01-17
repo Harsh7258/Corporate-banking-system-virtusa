@@ -1,0 +1,189 @@
+# version: "3.8"
+
+services:
+  # MongoDB Service
+  mongodb:
+    image: mongo:7.0
+    container_name: corporate-bank-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    environment:
+      - MONGO_INITDB_DATABASE=corporate_bank
+    networks:
+      - banking-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Zookeeper Service (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: corporate-bank-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - banking-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Kafka Service
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: corporate-bank-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+    networks:
+      - banking-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # Kafka Topic Initializer (Creates topics on startup)
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: corporate-bank-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - banking-network
+    entrypoint: /bin/sh
+    command: -c "
+      echo 'Waiting for Kafka to be ready...';
+      sleep 10;
+
+      echo 'Creating Kafka topics...';
+
+      kafka-topics --create --if-not-exists \
+      --topic credit-events-top \
+      --bootstrap-server kafka:29092 \
+      --partitions 1 \
+      --replication-factor 1;
+
+      kafka-topics --create --if-not-exists \
+      --topic client-events-top \
+      --bootstrap-server kafka:29092 \
+      --partitions 1 \
+      --replication-factor 1;
+
+      kafka-topics --create --if-not-exists \
+      --topic user-events-top \
+      --bootstrap-server kafka:29092 \
+      --partitions 1 \
+      --replication-factor 1;
+
+      echo 'Listing topics...';
+      kafka-topics --list --bootstrap-server kafka:29092;
+
+      echo 'Kafka init completed';
+      "
+
+  # Spring Boot Backend Service
+  backend:
+    build:
+      context: ./CropBankingSystemBackend
+      dockerfile: Dockerfile
+    container_name: corporate-bank-backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_DATA_MONGODB_HOST=mongodb
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_DATABASE=corporate_bank
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - JWT_SECRET=jdksmemkfdsthisdnnsisd323secretkey4j3ndk74828jddkkc
+      - JWT_EXPIRATION=7200000
+      - SERVER_PORT=8888
+    networks:
+      - banking-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # Angular Frontend with Nginx
+  frontend:
+    build:
+      context: ./banking-frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: corporate-bank-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "4200:80"
+      - "443:443"
+    networks:
+      - banking-network
+    restart: on-failure
+
+networks:
+  banking-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  kafka_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local

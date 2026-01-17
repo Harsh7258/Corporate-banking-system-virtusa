@@ -1,0 +1,50 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+CropBankingSystemBackend/logs/
+
+# Docker volumes (data persisted locally)
+mongodb_data/
+kafka_data/
+zookeeper_data/
+zookeeper_logs/
+
+# Environment files with secrets
+.env
+*.env.local
+*.env.production
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Build outputs (will be built in pipeline)
+dist/
+build/
+target/
+
+# Dependencies (will be installed in pipeline)
+node_modules/
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# SonarQube
+.sonar/
+.scannerwork/
