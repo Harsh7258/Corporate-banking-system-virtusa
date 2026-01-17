@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="KAFKA_LOG_PATH" value="logs"/>
+    <property name="KAFKA_LOG_FILE" value="${KAFKA_LOG_PATH}/kafka-events.log"/>
+
+    <!-- ================= CONSOLE APPENDER ================= -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ================= FILE APPENDER (Kafka Events ONLY) ================= -->
+    <appender name="KAFKA_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${KAFKA_LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${KAFKA_LOG_PATH}/kafka-events-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ================= ROOT LOGGER ================= -->
+    <!-- Spring Boot + app logs go to CONSOLE only -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- ================= SUPPRESS KAFKA FRAMEWORK LOGS ================= -->
+    <!-- Prevent Kafka client logs from appearing in console -->
+    <logger name="org.apache.kafka" level="WARN" additivity="true"/>
+    <logger name="org.springframework.kafka" level="WARN" additivity="true"/>
+
+    <!-- ================= YOUR KAFKA CONSUMER LOGGER ================= -->
+    <!-- ONLY your business Kafka events go to FILE -->
+    <logger name="org.example.kafka.consumer" level="INFO" additivity="false">
+        <appender-ref ref="KAFKA_FILE"/>
+    </logger>
+
+    <!-- Optional: Also log producer events if needed -->
+<!--    <logger name="org.example.kafka.producer" level="INFO" additivity="false">-->
+<!--        <appender-ref ref="KAFKA_FILE"/>-->
+<!--    </logger>-->
+</configuration>
