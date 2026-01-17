@@ -1,0 +1,128 @@
+<div class="update-status-modal">
+  
+  <!-- Modal Header -->
+  <div class="modal-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">rate_review</mat-icon>
+      <div>
+        <h2>Update Credit Status</h2>
+        <p>Review and update the credit request decision</p>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Credit Summary -->
+  <div class="credit-summary">
+    <div class="summary-item">
+      <mat-icon>business</mat-icon>
+      <div>
+        <span class="summary-label">Client</span>
+        <span class="summary-value">{{ credit.clientName }}</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <mat-icon>account_balance_wallet</mat-icon>
+      <div>
+        <span class="summary-label">Amount</span>
+        <span class="summary-value">{{ formatCurrency(credit.requestAmount) }}</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <mat-icon>schedule</mat-icon>
+      <div>
+        <span class="summary-label">Tenure</span>
+        <span class="summary-value">{{ credit.tenureMonths }} months</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purpose Display -->
+  <div class="purpose-section">
+    <h3>
+      <mat-icon>description</mat-icon>
+      Purpose
+    </h3>
+    <p class="purpose-text">{{ credit.purpose }}</p>
+  </div>
+
+  <!-- Update Form -->
+  <form [formGroup]="updateForm" (ngSubmit)="onSubmit()" class="update-form">
+    
+    <!-- Status Selection -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Decision</mat-label>
+      <mat-select formControlName="status" placeholder="Select status">
+        <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+          <mat-icon [style.color]="option.color === 'success' ? 'var(--success-color)' : 'var(--error-color)'">
+            {{ option.icon }}
+          </mat-icon>
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matPrefix>check_circle_outline</mat-icon>
+      <mat-error *ngIf="status?.hasError('required')">
+        Please select a decision
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Remarks -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Remarks *</mat-label>
+      <textarea 
+        matInput 
+        formControlName="remarks"
+        rows="4"
+        placeholder="Enter your remarks (minimum 10 characters)"
+      ></textarea>
+      <mat-icon matPrefix>comment</mat-icon>
+      <mat-hint>Remarks are required to update the status</mat-hint>
+      <mat-error *ngIf="remarks?.hasError('required')">
+        Remarks are required
+      </mat-error>
+      <mat-error *ngIf="remarks?.hasError('minlength')">
+        Remarks must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Important Note -->
+    <div class="note-box">
+      <mat-icon>info</mat-icon>
+      <p>
+        <strong>Important:</strong> Once submitted, this decision will be recorded and the RM will be notified. 
+        Please ensure your remarks are clear and professional.
+      </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        mat-stroked-button 
+        class="cancel-btn"
+        (click)="close()"
+        [disabled]="loading">
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        mat-raised-button 
+        color="primary"
+        class="submit-btn"
+        [disabled]="loading || updateForm.invalid">
+        <span *ngIf="!loading">
+          <mat-icon>check</mat-icon>
+          Submit Decision
+        </span>
+        <span *ngIf="loading" class="loading-text">
+          <span class="spinner-small"></span>
+          Submitting...
+        </span>
+      </button>
+    </div>
+
+  </form>
+
+</div>

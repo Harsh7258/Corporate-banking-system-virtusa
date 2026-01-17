@@ -1,0 +1,240 @@
+.client-details-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Modal Header */
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  animation: slideDown 0.3s ease;
+}
+
+.header-content {
+   display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+}
+
+.header-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.close-btn {
+  color: white;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  gap: var(--spacing-md);
+  min-height: 300px;
+
+  p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Info Cards */
+.info-card {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--border-color);
+
+  mat-icon {
+    color: var(--primary-color);
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.value {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  word-break: break-word;
+
+  &.turnover {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--success-color);
+  }
+
+  &.email {
+    color: var(--info-color);
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &.phone {
+    color: var(--text-primary);
+    font-family: monospace;
+  }
+
+  &.id {
+    font-family: monospace;
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: var(--bg-color);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* Industry Chip */
+.industry-chip {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  width: fit-content;
+}
+
+/* Document Status */
+.document-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--error-color);
+  color: white;
+  width: fit-content;
+
+  &.submitted {
+    background: var(--success-color);
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 2px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-content h2 {
+    font-size: 20px;
+  }
+
+  .modal-content {
+    padding: var(--spacing-md);
+  }
+}

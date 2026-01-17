@@ -1,0 +1,123 @@
+.create-user-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+
+  .header-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p {
+    font-size: 14px;
+    margin-top: 4px;
+    opacity: 0.9;
+  }
+}
+
+.form-card {
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.form-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 2px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+
+  mat-icon {
+    color: var(--primary-color);
+    font-size: 24px;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-form-field {
+  ::ng-deep {
+    .mat-mdc-form-field-icon-prefix {
+      padding-right: var(--spacing-sm);
+      color: var(--primary-color);
+    }
+
+    .mat-mdc-text-field-wrapper {
+      background: white;
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid var(--border-color);
+
+  @media (max-width: 768px) {
+    justify-content: stretch;
+  }
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 12px 32px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 20px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+  }
+}

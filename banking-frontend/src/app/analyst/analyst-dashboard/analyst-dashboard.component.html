@@ -1,0 +1,169 @@
+<div class="analyst-dashboard-container">
+  
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Analyst Dashboard</h1>
+    <p>Review and approve credit requests</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <app-stat-card
+      title="Total Credits"
+      [value]="stats.total"
+      icon="request_quote"
+      colorClass="primary"
+      subtitle="All credit requests"
+    ></app-stat-card>
+
+    <app-stat-card
+      title="Approved"
+      [value]="stats.approved"
+      icon="check_circle"
+      colorClass="success"
+      subtitle="Approved requests"
+    ></app-stat-card>
+
+    <app-stat-card
+      title="Pending"
+      [value]="stats.pending"
+      icon="pending"
+      colorClass="warning"
+      subtitle="Awaiting review"
+    ></app-stat-card>
+
+    <app-stat-card
+      title="Rejected"
+      [value]="stats.rejected"
+      icon="cancel"
+      colorClass="info"
+      subtitle="Rejected requests"
+    ></app-stat-card>
+  </div>
+
+  <!-- Credit Requests Table Card -->
+  <mat-card class="table-card">
+    <div class="table-header">
+      <h2>All Credit Requests</h2>
+      <button mat-raised-button color="primary" class="refresh-btn" (click)="loadCreditRequests()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading credit requests...</p>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper" *ngIf="!loading">
+      <table mat-table [dataSource]="creditRequests" class="credit-table">
+
+        <!-- Client Name Column -->
+        <ng-container matColumnDef="clientName">
+          <th mat-header-cell *matHeaderCellDef>Client</th>
+          <td mat-cell *matCellDef="let credit">
+            <div class="client-cell">
+              <mat-icon class="client-icon">business</mat-icon>
+              <span class="client-name">{{ credit.clientName || 'N/A' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- RM Name Column -->
+        <ng-container matColumnDef="rmName">
+          <th mat-header-cell *matHeaderCellDef>RM</th>
+          <td mat-cell *matCellDef="let credit">
+            <div class="rm-cell">
+              <mat-icon class="rm-icon">badge</mat-icon>
+              <span>{{ credit.rmName || 'N/A' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Request Amount Column -->
+        <ng-container matColumnDef="requestAmount">
+          <th mat-header-cell *matHeaderCellDef>Amount</th>
+          <td mat-cell *matCellDef="let credit">
+            <span class="amount">{{ formatCurrency(credit.requestAmount) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Tenure Months Column -->
+        <ng-container matColumnDef="tenureMonths">
+          <th mat-header-cell *matHeaderCellDef>Tenure</th>
+          <td mat-cell *matCellDef="let credit">
+            <div class="tenure-cell">
+              <mat-icon class="tenure-icon">schedule</mat-icon>
+              <span>{{ credit.tenureMonths }} months</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Purpose Column -->
+        <ng-container matColumnDef="purpose">
+          <th mat-header-cell *matHeaderCellDef>Purpose</th>
+          <td mat-cell *matCellDef="let credit">
+            <span class="purpose" [title]="credit.purpose">
+              {{ credit.purpose.length > 40 ? (credit.purpose | slice:0:40) + '...' : credit.purpose }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Details Column -->
+        <ng-container matColumnDef="details">
+          <th mat-header-cell *matHeaderCellDef>Details</th>
+          <td mat-cell *matCellDef="let credit">
+            <button 
+              mat-icon-button 
+              color="primary"
+              (click)="openDetailsModal(credit)"
+              matTooltip="View Details">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let credit">
+            <mat-chip [class]="getStatusClass(credit.status)">
+              {{ credit.status || 'PENDING' }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let credit">
+            <button 
+              mat-raised-button 
+              [color]="isPending(credit.status || 'PENDING') ? 'accent' : 'primary'"
+              class="action-btn"
+              (click)="openUpdateStatusModal(credit)">
+              <mat-icon>{{ isPending(credit.status || 'PENDING') ? 'rate_review' : 'edit' }}</mat-icon>
+              {{ isPending(credit.status || 'PENDING') ? 'Review' : 'Update' }}
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+
+        <!-- No Data -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+            <mat-icon>info</mat-icon>
+            <p>No credit requests found.</p>
+          </td>
+        </tr>
+
+      </table>
+    </div>
+  </mat-card>
+
+</div>

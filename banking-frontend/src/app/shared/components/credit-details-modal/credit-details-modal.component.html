@@ -1,0 +1,114 @@
+<div class="details-modal">
+      <div class="modal-header">
+        <div class="header-content">
+          <mat-icon class="header-icon">description</mat-icon>
+          <div>
+            <h2>Credit Request Details</h2>
+            <p>View detailed information about this credit request</p>
+          </div>
+        </div>
+        <button mat-icon-button class="close-btn" (click)="close()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-content">
+        
+        <!-- Status Badge -->
+        <div class="status-section">
+          <mat-chip [class]="getStatusClass(credit.status)">
+            {{ credit.status || 'PENDING' }}
+          </mat-chip>
+        </div>
+
+        <!-- Client Information -->
+        <div class="info-section">
+          <h3>
+            <mat-icon>business</mat-icon>
+            Client Information
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Company Name</span>
+              <span class="value">{{ credit.clientName || 'N/A' }}</span>
+            </div>
+            <div class="info-item" *ngIf="credit.industry">
+              <span class="label">Industry</span>
+              <span class="value">{{ credit.industry }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RM Information -->
+        <div class="info-section" *ngIf="credit.rmName">
+          <h3>
+            <mat-icon>badge</mat-icon>
+            Relationship Manager
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">RM Name</span>
+              <span class="value">{{ credit.rmName }}</span>
+            </div>
+            <div class="info-item" *ngIf="credit.rmEmail">
+              <span class="label">Email</span>
+              <span class="value">{{ credit.rmEmail }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit Request Details -->
+        <div class="info-section">
+          <h3>
+            <mat-icon>request_quote</mat-icon>
+            Request Details
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Request Amount</span>
+              <span class="value amount">{{ formatCurrency(credit.requestAmount) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Tenure</span>
+              <span class="value">{{ credit.tenureMonths }} months</span>
+            </div>
+            <div class="info-item full-width">
+              <span class="label">Purpose</span>
+              <span class="value">{{ credit.purpose }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="info-section" *ngIf="credit.remarks">
+          <h3>
+            <mat-icon>comment</mat-icon>
+            Remarks
+          </h3>
+          <div class="remarks-box">
+            {{ credit.remarks }}
+          </div>
+        </div>
+
+        <!-- Timestamps -->
+        <div class="info-section" *ngIf="credit.createdAt">
+          <h3>
+            <mat-icon>schedule</mat-icon>
+            Timeline
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Created At</span>
+              <span class="value">{{ credit.createdAt | date: 'medium' }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-actions">
+        <button mat-raised-button color="primary" (click)="close()">
+          Close
+        </button>
+      </div>
+    </div>

@@ -1,0 +1,89 @@
+<div class="create-user-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <mat-icon class="header-icon">person_add</mat-icon>
+    <div>
+      <h1>Create New User</h1>
+      <p>Admin only – add a new system user</p>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <mat-card class="form-card">
+    <form [formGroup]="createUserForm">
+
+      <!-- User Information Section -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <mat-icon>account_circle</mat-icon>
+          User Information
+        </h3>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input matInput formControlName="username" />
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="createUserForm.get('username')?.hasError('required')">
+              Username is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="createUserForm.get('email')?.hasError('email')">
+              Enter a valid email
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" />
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-error *ngIf="createUserForm.get('password')?.hasError('minlength')">
+              Minimum 6 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role">
+              <mat-option *ngFor="let role of roles" [value]="role.value">
+                {{ role.label }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>badge</mat-icon>
+            <mat-error *ngIf="createUserForm.get('role')?.hasError('required')">
+              Role is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          class="submit-btn"
+          (click)="submit()"
+          [disabled]="createUserForm.invalid">
+          <mat-icon>check_circle</mat-icon>
+          Create User
+        </button>
+      </div>
+
+    </form>
+  </mat-card>
+
+</div>

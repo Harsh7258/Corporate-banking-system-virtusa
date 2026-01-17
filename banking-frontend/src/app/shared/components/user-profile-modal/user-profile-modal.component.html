@@ -1,0 +1,60 @@
+<div class="profile-modal">
+      <div class="modal-header">
+        <div class="avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <h2>User Profile</h2>
+        <button mat-icon-button class="close-btn" (click)="close()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-content" *ngIf="data">
+        <div class="info-row">
+          <mat-icon class="info-icon">person</mat-icon>
+          <div class="info-details">
+            <span class="info-label">Username</span>
+            <span class="info-value">{{ data.username }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <mat-icon class="info-icon">email</mat-icon>
+          <div class="info-details">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ data.email }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <mat-icon class="info-icon">badge</mat-icon>
+          <div class="info-details">
+            <span class="info-label">Role</span>
+            <span class="info-value role-badge" 
+                  [class.admin]="data.role === 'ADMIN'"
+                  [class.rm]="data.role === 'RELATIONSHIP_MANAGER'"
+                  [class.analyst]="data.role === 'ANALYST'">
+              {{ data.role }}
+            </span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <mat-icon class="info-icon">verified</mat-icon>
+          <div class="info-details">
+            <span class="info-label">Status</span>
+            <span class="info-value status-badge" [class.active]="data.active">
+              {{ data.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="info-row" *ngIf="data.createdAt">
+          <mat-icon class="info-icon">calendar_today</mat-icon>
+          <div class="info-details">
+            <span class="info-label">Member Since</span>
+            <span class="info-value">{{ data.createdAt | date: 'medium' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
