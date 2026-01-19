@@ -140,15 +140,16 @@ pipeline {
     
     post {
         success {
-            echo 'Pipeline completed successfully!'
-            // Fetch EC2 public IP dynamically
+            script {
                 def PUBLIC_IP = sh(
                     script: "curl -s http://169.254.169.254/latest/meta-data/public-ipv4",
                     returnStdout: true
                 ).trim()
 
-            echo "Backend API: http://${PUBLIC_IP}:8888"
-            echo "Frontend App: http://${PUBLIC_IP}:4200"
+                echo 'Pipeline completed successfully!'
+                echo "Backend API: http://${PUBLIC_IP}:8888"
+                echo "Frontend App: http://${PUBLIC_IP}:4200"
+            }
         }
         failure {
             echo 'Pipeline failed! Check logs for details.'
