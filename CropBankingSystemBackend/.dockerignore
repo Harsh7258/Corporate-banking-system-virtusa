@@ -1,4 +1,4 @@
-target/
+<!-- target/
 .mvn/
 mvnw
 mvnw.cmd
@@ -8,4 +8,21 @@ mvnw.cmd
 .gitignore
 README.md
 .env
-*.log
+*.log -->
+
+# .dockerignore for backend
+
+# Allow target folder (needed for Docker build)
+
+# Ignore everything first
+
+-
+
+# Then allow what we need
+
+!target/\*.jar
+!Dockerfile
+
+# Don't ignore these if they exist
+
+!target/

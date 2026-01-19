@@ -17,11 +17,10 @@ pipeline {
     }
     
     stages {
-        stage('Cleanup') {
+        stage('Cleanup Docker Only') {
             steps {
                 script {
-                    echo '=== Cleaning workspace and Docker resources ==='
-                    cleanWs()
+                    echo '=== Cleaning Docker resources (NOT workspace) ==='
                     
                     sh '''
                         docker-compose -f ${DOCKER_COMPOSE_FILE} down --remove-orphans || true
