@@ -80,17 +80,17 @@ pipeline {
                     
                     sh '''
                         echo "Building Backend Docker image..."
-                        cd ${BACKEND_DIR}
-                        docker build -t corporate-bank-backend:latest --no-cache .
-                        cd ..
+                        docker build -t corporate-bank-backend:latest \
+                          -f ${BACKEND_DIR}/Dockerfile \
+                          ${BACKEND_DIR}
                         
                         echo "Cleaning intermediate images..."
                         docker image prune -f
                         
                         echo "Building Frontend Docker image..."
-                        cd ${FRONTEND_DIR}
-                        docker build -t corporate-bank-frontend:latest --no-cache .
-                        cd ..
+                        docker build -t corporate-bank-frontend:latest \
+                          -f ${FRONTEND_DIR}/Dockerfile \
+                          ${FRONTEND_DIR}
                         
                         echo "Final cleanup..."
                         docker image prune -f
