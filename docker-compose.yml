@@ -5,6 +5,7 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: corporate-bank-mongodb
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
@@ -25,6 +26,7 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: corporate-bank-zookeeper
+    restart: unless-stopped
     ports:
       - "2181:2181"
     environment:
@@ -46,6 +48,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: corporate-bank-kafka
+    restart: unless-stopped
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -127,6 +130,7 @@ services:
       context: ./CropBankingSystemBackend
       dockerfile: Dockerfile
     container_name: corporate-bank-backend
+    restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
@@ -141,18 +145,20 @@ services:
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_DATA_MONGODB_DATABASE=corporate_bank
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - JWT_SECRET=jdksmemkfdsthisdnnsisd323secretkey4j3ndk74828jddkkc
+      - JWT_SECRET=${JWT_SECRET:-jdksmemkfdsthisdnnsisd323secretkey4j3ndk74828jddkkc}
       - JWT_EXPIRATION=7200000
       - SERVER_PORT=8888
+      - SPRING_PROFILES_ACTIVE=prod
     networks:
       - banking-network
-    restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 90s
+    volumes:
+      - backend_logs:/app/logs
 
   # Angular Frontend with Nginx
   frontend:
@@ -162,6 +168,7 @@ services:
       args:
         - NODE_ENV=production
     container_name: corporate-bank-frontend
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_started
@@ -170,7 +177,6 @@ services:
       - "443:443"
     networks:
       - banking-network
-    restart: on-failure
 
 networks:
   banking-network:
@@ -186,4 +192,6 @@ volumes:
   zookeeper_data:
     driver: local
   zookeeper_logs:
+    driver: local
+  backend_logs:
     driver: local
