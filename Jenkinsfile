@@ -172,8 +172,19 @@ pipeline {
     post {
         success {
             script {
+                def TOKEN = sh(
+                    script: '''
+                    curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
+                    ''',
+                    returnStdout: true
+                ).trim()
+
                 def PUBLIC_IP = sh(
-                    script: "curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo 'localhost'",
+                    script: '''
+                    echo "$(curl -s -H "X-aws-ec2-metadata-token: ''' + TOKEN + '''" \
+                    http://169.254.169.254/latest/meta-data/public-ipv4)"
+                    ''',
                     returnStdout: true
                 ).trim()
 
