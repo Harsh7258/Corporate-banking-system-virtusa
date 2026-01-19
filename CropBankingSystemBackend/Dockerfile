@@ -1,4 +1,12 @@
-# Optimized Dockerfile - Jenkins builds JAR, Docker packages it
+# Multi-stage build - Stage 1 just copies existing JAR
+FROM busybox:latest AS jarcopy
+
+WORKDIR /build
+
+# Copy the JAR that Jenkins already built
+COPY target/*.jar app.jar
+
+# Stage 2 - Runtime
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
@@ -9,8 +17,8 @@ RUN apk add --no-cache curl
 # Create logs directory
 RUN mkdir -p /app/logs
 
-# Copy pre-built JAR from Jenkins workspace (built in previous stage)
-COPY target/*.jar app.jar
+# Copy JAR from previous stage
+COPY --from=jarcopy /build/app.jar app.jar
 
 # Expose port
 EXPOSE 8888
