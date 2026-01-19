@@ -15,12 +15,16 @@ services:
       - MONGO_INITDB_DATABASE=corporate_bank
     networks:
       - banking-network
+    # OPTIMIZED: Reduced healthcheck frequency, added memory limits
+    mem_limit: 512m
+    mem_reservation: 256m
+    command: mongod --wiredTigerCacheSizeGB 0.25
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # Zookeeper Service (required for Kafka)
   zookeeper:
@@ -32,17 +36,22 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      # OPTIMIZED: Memory limits for Zookeeper
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_logs:/var/lib/zookeeper/log
     networks:
       - banking-network
+    # OPTIMIZED: Memory limits
+    mem_limit: 384m
+    mem_reservation: 256m
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # Kafka Service
   kafka:
@@ -69,8 +78,13 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_LOG_RETENTION_HOURS: 168
       KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      # OPTIMIZED: Memory limits for Kafka
+      KAFKA_HEAP_OPTS: "-Xmx384m -Xms256m"
     networks:
       - banking-network
+    # OPTIMIZED: Memory limits
+    mem_limit: 512m
+    mem_reservation: 384m
     healthcheck:
       test:
         [
@@ -79,12 +93,12 @@ services:
           "--bootstrap-server",
           "localhost:9092",
         ]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 40s
 
-  # Kafka Topic Initializer (Creates topics on startup)
+  # Kafka Topic Initializer
   kafka-init:
     image: confluentinc/cp-kafka:7.5.0
     container_name: corporate-bank-kafka-init
@@ -93,6 +107,8 @@ services:
         condition: service_healthy
     networks:
       - banking-network
+    # OPTIMIZED: Memory limits
+    mem_limit: 256m
     entrypoint: /bin/sh
     command: -c "
       echo 'Waiting for Kafka to be ready...';
@@ -149,14 +165,19 @@ services:
       - JWT_EXPIRATION=7200000
       - SERVER_PORT=8888
       - SPRING_PROFILES_ACTIVE=prod
+      # OPTIMIZED: JVM memory settings
+      - JAVA_OPTS=-Xmx384m -Xms256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC
     networks:
       - banking-network
+    # OPTIMIZED: Memory limits and relaxed healthcheck
+    mem_limit: 512m
+    mem_reservation: 384m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
+      interval: 45s
+      timeout: 15s
+      retries: 3
+      start_period: 120s
     volumes:
       - backend_logs:/app/logs
 
@@ -177,6 +198,9 @@ services:
       - "443:443"
     networks:
       - banking-network
+    # OPTIMIZED: Memory limits (Nginx is lightweight)
+    mem_limit: 128m
+    mem_reservation: 64m
 
 networks:
   banking-network:

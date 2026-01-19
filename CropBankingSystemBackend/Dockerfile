@@ -1,40 +1,33 @@
-# Multi-stage build for Spring Boot application
+# Optimized Dockerfile for Spring Boot Backend
+# Jenkins will build the JAR, Docker will just package it
 
-# Stage 1: Build the application
-FROM maven:3.9-eclipse-temurin-17 AS build
-
-WORKDIR /app
-
-# Copy pom.xml and download dependencies (cache optimization)
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the application
-RUN mvn clean package -DskipTests
-
-# Stage 2: Runtime image
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl for healthcheck (alpine version)
+RUN apk add --no-cache curl
 
 # Create logs directory
 RUN mkdir -p /app/logs
 
-# Copy the JAR file from build stage
-COPY --from=build /app/target/*.jar app.jar
+# CRITICAL: Copy pre-built JAR from Jenkins workspace
+# Jenkins builds it, Docker just packages it (no double build)
+COPY target/*.jar app.jar
 
 # Expose port
 EXPOSE 8888
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
+HEALTHCHECK --interval=45s --timeout=15s --start-period=120s --retries=3 \
   CMD curl -f http://localhost:8888/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run with optimized JVM settings for low memory
+ENTRYPOINT ["java", \
+    "-Xmx384m", \
+    "-Xms256m", \
+    "-XX:MaxMetaspaceSize=128m", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=200", \
+    "-jar", \
+    "app.jar"]

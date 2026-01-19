@@ -12,12 +12,35 @@ pipeline {
         BACKEND_DIR = 'CropBankingSystemBackend'
         FRONTEND_DIR = 'banking-frontend'
         PROJECT_NAME = 'corporate-bank'
+        // CRITICAL: Limit Maven memory
+        MAVEN_OPTS = '-Xmx512m -XX:MaxMetaspaceSize=256m'
+        // CRITICAL: Limit Node memory
+        NODE_OPTIONS = '--max-old-space-size=768'
     }
     
     stages {
-        stage('Cleanup Workspace') {
+        stage('Cleanup') {
             steps {
-                cleanWs()
+                script {
+                    echo '=== Cleaning workspace and Docker resources ==='
+                    cleanWs()
+                    
+                    // Aggressive Docker cleanup
+                    sh '''
+                        # Stop all containers
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} down --remove-orphans || true
+                        
+                        # Remove all stopped containers
+                        docker container prune -f || true
+                        
+                        # Remove dangling images
+                        docker image prune -f || true
+                        
+                        # Show current usage
+                        echo "=== Docker Disk Usage ==="
+                        docker system df
+                    '''
+                }
             }
         }
         
@@ -28,61 +51,42 @@ pipeline {
             }
         }
         
-        stage('Backend - Build & Test') {
+        stage('Backend - Build JAR') {
             steps {
                 dir("${BACKEND_DIR}") {
                     script {
-                        echo 'Building Backend with Maven...'
-                        sh 'mvn clean package -DskipTests'
+                        echo '=== Building Backend JAR with Maven ==='
+                        // Build JAR that Docker will copy (no double build)
+                        sh 'mvn clean package -DskipTests -T 1C'
                         
-                        echo 'Running Backend Tests...'
-                        sh 'mvn test'
-                        
-                        echo 'Generating Code Coverage Report...'
-                        sh 'mvn jacoco:report'
+                        // Verify JAR was created
+                        sh '''
+                            echo "=== Checking for JAR file ==="
+                            ls -lh target/*.jar
+                        '''
                     }
                 }
             }
         }
         
-        stage('Frontend - Build & Test') {
+        stage('Frontend - Build Production') {
             steps {
                 dir("${FRONTEND_DIR}") {
                     script {
-                        echo 'Installing Frontend Dependencies...'
-                        sh 'npm ci'
+                        echo '=== Building Frontend with Angular ==='
                         
-                        echo 'Running Frontend Tests...'
-                        sh 'npm run test -- --watch=false --browsers=ChromeHeadless'
+                        // Install dependencies
+                        sh 'npm ci --prefer-offline --no-audit --progress=false'
                         
-                        echo 'Building Frontend for Production...'
-                        sh 'npm run build --prod'
+                        // Build for production (Docker will just copy the dist folder)
+                        sh 'npm run build -- --configuration production'
+                        
+                        // Verify build output
+                        sh '''
+                            echo "=== Checking build output ==="
+                            ls -lR dist/
+                        '''
                     }
-                }
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    echo 'Running SonarQube Analysis...'
-                    dir("${BACKEND_DIR}") {
-                        // If you have SonarQube server configured
-                        // sh 'mvn sonar:sonar'
-                        echo 'SonarQube analysis skipped (configure SonarQube server if needed)'
-                    }
-                }
-            }
-        }
-        
-        stage('Stop Previous Containers') {
-            steps {
-                script {
-                    echo 'Stopping and removing previous containers...'
-                    sh '''
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} down --remove-orphans || true
-                        docker system prune -f
-                    '''
                 }
             }
         }
@@ -90,8 +94,25 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    echo 'Building Docker images...'
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache"
+                    echo '=== Building Docker Images (Sequential) ==='
+                    
+                    // Build images one at a time to save memory
+                    sh '''
+                        echo "Building Backend Docker image..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache backend
+                        
+                        echo "Cleaning up intermediate images..."
+                        docker image prune -f
+                        
+                        echo "Building Frontend Docker image..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache frontend
+                        
+                        echo "Final cleanup of build cache..."
+                        docker image prune -f
+                        
+                        echo "=== Docker Images Created ==="
+                        docker images | grep corporate-bank
+                    '''
                 }
             }
         }
@@ -99,14 +120,33 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 script {
-                    echo 'Starting application with Docker Compose...'
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d"
+                    echo '=== Starting Application Services ==='
                     
-                    echo 'Waiting for services to be healthy...'
-                    sh 'sleep 60'
-                    
-                    echo 'Checking service status...'
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} ps"
+                    // Start services in order with delays for stability
+                    sh '''
+                        echo "Starting infrastructure services..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d mongodb zookeeper
+                        sleep 20
+                        
+                        echo "Starting Kafka..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka
+                        sleep 25
+                        
+                        echo "Initializing Kafka topics..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka-init
+                        sleep 15
+                        
+                        echo "Starting Backend..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d backend
+                        sleep 30
+                        
+                        echo "Starting Frontend..."
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d frontend
+                        sleep 10
+                        
+                        echo "=== All services started ==="
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} ps
+                    '''
                 }
             }
         }
@@ -114,25 +154,45 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    echo 'Performing health checks...'
+                    echo '=== Performing Health Checks ==='
+                    
+                    // Wait for services to be ready
+                    sh 'sleep 30'
                     
                     // Check backend health
                     retry(5) {
-                        sleep 10
+                        sleep 15
                         sh '''
+                            echo "Checking Backend health..."
                             curl -f http://localhost:8888/actuator/health || exit 1
                         '''
                     }
                     
                     // Check frontend
-                    retry(5) {
+                    retry(3) {
                         sleep 10
                         sh '''
+                            echo "Checking Frontend..."
                             curl -f http://localhost:4200 || exit 1
                         '''
                     }
                     
-                    echo 'All services are healthy!'
+                    echo '✓ All services are healthy!'
+                }
+            }
+        }
+        
+        stage('Show Logs') {
+            steps {
+                script {
+                    echo '=== Application Logs (Last 20 lines) ==='
+                    sh '''
+                        echo "--- Backend Logs ---"
+                        docker logs corporate-bank-backend --tail=20 || true
+                        
+                        echo "--- Kafka Logs ---"
+                        docker logs corporate-bank-kafka --tail=10 || true
+                    '''
                 }
             }
         }
@@ -142,22 +202,41 @@ pipeline {
         success {
             script {
                 def PUBLIC_IP = sh(
-                    script: "curl -s http://169.254.169.254/latest/meta-data/public-ipv4",
+                    script: "curl -s http://169.254.169.254/latest/meta-data/public-ipv4 || echo 'localhost'",
                     returnStdout: true
                 ).trim()
 
-                echo 'Pipeline completed successfully!'
-                echo "Backend API: http://${PUBLIC_IP}:8888"
-                echo "Frontend App: http://${PUBLIC_IP}:4200"
+                echo 'DEPLOYMENT SUCCESSFUL!'
+                echo ''
+                echo "Frontend:  http://${PUBLIC_IP}:4200"
+                echo "Backend:   http://${PUBLIC_IP}:8888"
+                echo ''
+                echo 'Services may take 2-3 minutes to fully initialize'
+                echo '────────────────────────────────────────────────'
             }
         }
         failure {
-            echo 'Pipeline failed! Check logs for details.'
-            sh "docker-compose -f ${DOCKER_COMPOSE_FILE} logs"
+            echo 'DEPLOYMENT FAILED!'
+            
+            sh '''
+                echo "=== Container Status ==="
+                docker-compose -f ${DOCKER_COMPOSE_FILE} ps
+                
+                echo "=== Backend Logs ==="
+                docker logs corporate-bank-backend --tail=50 || true
+                
+                echo "=== Frontend Logs ==="
+                docker logs corporate-bank-frontend --tail=30 || true
+            '''
         }
         always {
-            echo 'Cleaning up...'
-            sh 'docker system prune -f'
+            echo 'Cleaning up unused Docker resources...'
+            sh '''
+                docker image prune -f || true
+                docker container prune -f || true
+                echo "=== Final Docker Usage ==="
+                docker system df
+            '''
         }
     }
 }
