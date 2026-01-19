@@ -142,9 +142,7 @@ services:
 
   # Spring Boot Backend Service
   backend:
-    build:
-      context: ./CropBankingSystemBackend
-      dockerfile: Dockerfile
+    image: corporate-bank-backend:latest # Use pre-built image
     container_name: corporate-bank-backend
     restart: unless-stopped
     depends_on:
@@ -165,11 +163,9 @@ services:
       - JWT_EXPIRATION=7200000
       - SERVER_PORT=8888
       - SPRING_PROFILES_ACTIVE=prod
-      # OPTIMIZED: JVM memory settings
       - JAVA_OPTS=-Xmx384m -Xms256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC
     networks:
       - banking-network
-    # OPTIMIZED: Memory limits and relaxed healthcheck
     mem_limit: 512m
     mem_reservation: 384m
     healthcheck:
@@ -183,11 +179,7 @@ services:
 
   # Angular Frontend with Nginx
   frontend:
-    build:
-      context: ./banking-frontend
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
+    image: corporate-bank-frontend:latest # Use pre-built image
     container_name: corporate-bank-frontend
     restart: unless-stopped
     depends_on:
@@ -198,7 +190,6 @@ services:
       - "443:443"
     networks:
       - banking-network
-    # OPTIMIZED: Memory limits (Nginx is lightweight)
     mem_limit: 128m
     mem_reservation: 64m
 
