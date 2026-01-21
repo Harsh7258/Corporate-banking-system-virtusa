@@ -11,6 +11,8 @@ import { environment } from '../../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
+
+// @desc Service to manage user data and statistics
 export class UserService {
 
   private apiUrl = `${environment.apiUrl}`;

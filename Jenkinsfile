@@ -31,9 +31,9 @@ pipeline {
                     echo '=== Checking if code has changed since last build ==='
                     sh '''
                         git fetch origin main
-                        # Check for changes in backend or frontend
+
                         if git diff --name-only origin/main HEAD | grep -E "CropBankingSystemBackend|banking-frontend"; then
-                            echo "Changes detected, proceeding with build..."
+                            echo "Changes detected, continuing pipeline"
                         else
                             echo "No changes detected in backend/frontend. Skipping build & deploy."
                             exit 1

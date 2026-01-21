@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// @desc Service to handle client management logic
 @Service
 public class ClientService {
     @Autowired
@@ -81,7 +82,7 @@ public class ClientService {
         String rmId = getRmId(authentication);
 
         ClientOn client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException("Client not found with: "+clientId));
+                .orElseThrow(() -> new ClientNotFoundException("Client not found with: " + clientId));
 
         if (!client.getRmId().equals(rmId)) {
             throw new UnauthAccessDeniedException("You are not allowed to update this client");
