@@ -32,12 +32,15 @@ pipeline {
                     sh '''
                         git fetch origin main
 
-                        if git diff --name-only origin/main HEAD | grep -E "CropBankingSystemBackend|banking-frontend"; then
-                            echo "Changes detected, continuing pipeline"
-                        else
-                            echo "No changes detected in backend/frontend. Skipping build & deploy."
-                            exit 1
+                        if [ -z "$GIT_PREVIOUS_SUCCESSFUL_COMMIT" ]; then
+                            echo "First run or no previous successful build – proceeding"
+                            exit 0
                         fi
+
+                        git diff --name-only $GIT_PREVIOUS_SUCCESSFUL_COMMIT HEAD | \
+                        grep -E "CropBankingSystemBackend|banking-frontend" && \
+                        echo "Changes detected, continuing pipeline" || \
+                        (echo "No relevant code changes, skipping build"; exit 1)
                     '''
                 }
             }
