@@ -121,12 +121,12 @@ pipeline {
                 script {
                     echo '=== Deploying Backend & Frontend Only ==='
                     sh '''
-                        # Backend
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --no-deps backend
+                        # Build + Start Backend
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --build --no-deps backend
                         sleep 30
 
-                        # Frontend
-                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --no-deps frontend
+                        # Build + Start Frontend
+                        docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --build --no-deps frontend
                         sleep 15
 
                         echo "=== Containers Status ==="
