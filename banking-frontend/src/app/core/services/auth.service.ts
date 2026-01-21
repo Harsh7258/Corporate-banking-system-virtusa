@@ -21,6 +21,8 @@ export interface AuthState {
 @Injectable({
   providedIn: 'root'
 })
+
+// @desc Service to handle authentication logic: login, logout, auth state management
 export class AuthService {
 
   private apiUrl = `${environment.apiUrl}/auth`;

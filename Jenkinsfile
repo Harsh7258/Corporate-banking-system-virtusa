@@ -28,25 +28,21 @@ pipeline {
         stage('Check for Code Changes') {
             steps {
                 script {
-                    echo "=== Checking if code has changed since last build ==="
-                    // Fetch latest changes
-                    sh 'git fetch origin main'
-                    // Check if there are changes in backend or frontend
-                    def changes = sh(
-                        script: "git diff --name-only origin/main HEAD | grep -E '${BACKEND_DIR}|${FRONTEND_DIR}' || true",
-                        returnStdout: true
-                    ).trim()
-                    if (changes == '') {
-                        echo "No changes detected in backend/frontend. Skipping build & deploy."
-                        currentBuild.result = 'SUCCESS'
-                        // Stop the pipeline here
-                        error("No relevant code changes.")
-                    } else {
-                        echo "Changes detected in: ${changes}. Proceeding with build."
-                    }
+                    echo '=== Checking if code has changed since last build ==='
+                    sh '''
+                        git fetch origin main
+                        # Check for changes in backend or frontend
+                        if git diff --name-only origin/main HEAD | grep -E "CropBankingSystemBackend|banking-frontend"; then
+                            echo "Changes detected, proceeding with build..."
+                        else
+                            echo "No changes detected in backend/frontend. Skipping build & deploy."
+                            exit 1
+                        fi
+                    '''
                 }
             }
         }
+
 
         stage('Cleanup Docker Only') {
             steps {

@@ -9,6 +9,8 @@ const USER_KEY = 'role';
 @Injectable({
   providedIn: 'root'
 })
+
+// @desc Service to manage JWT tokens and user role in localStorage
 export class TokenService {
 
   private tokenSubject$ = new BehaviorSubject<string | null>(this.getToken());
