@@ -5,6 +5,7 @@ import { TokenService } from '../services/token.service';
 import { AuthService } from '../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 
+// @desc JWT Interceptor to add Authorization header and handle HTTP errors globally
 export const jwtInterceptor: HttpInterceptorFn = (request, next) => {
   const tokenService = inject(TokenService);
   const authService = inject(AuthService);
@@ -20,6 +21,7 @@ export const jwtInterceptor: HttpInterceptorFn = (request, next) => {
     });
   }
 
+  // @desc Global error handling for HTTP responses using RxJS catchError
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
